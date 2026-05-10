@@ -1,0 +1,59 @@
+services:
+  db:
+    image: mysql:8.1
+    container_name: innovatech-db
+    restart: always
+    environment:
+      MYSQL_DATABASE: innovatech_ops
+      MYSQL_USER: app_user
+      MYSQL_PASSWORD: app_secret
+      MYSQL_ROOT_PASSWORD: root_secret
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./bd/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./bd/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+    networks:
+      - innovatech-net
+
+  backend:
+    build:
+      context: ./backend
+    container_name: innovatech-backend
+    restart: always
+    depends_on:
+      - db
+    environment:
+      PORT: 3001
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: innovatech_ops
+      DB_USER: app_user
+      DB_PASSWORD: app_secret
+      CORS_ORIGIN: http://localhost:8080
+    ports:
+      - "3001:3001"
+    networks:
+      - innovatech-net
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:3001
+    container_name: innovatech-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+    networks:
+      - innovatech-net
+
+volumes:
+  mysql_data:
+
+networks:
+  innovatech-net:
+    driver: bridge
