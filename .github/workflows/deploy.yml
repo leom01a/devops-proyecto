@@ -6,7 +6,7 @@ on:
       - deploy
 
 jobs:
-  docker:
+  docker-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,10 +21,42 @@ jobs:
 
       - name: Build frontend
         run: |
-          docker build -t bpy4shn/frontend:latest ./frontend
+          docker build --build-arg VITE_API_URL= -t bpy4shn/frontend:latest ./frontend
           docker push bpy4shn/frontend:latest
 
       - name: Build backend
         run: |
           docker build -t bpy4shn/backend:latest ./backend
           docker push bpy4shn/backend:latest
+
+      - name: Deploy frontend and backend in EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            docker pull bpy4shn/frontend:latest
+            docker rm -f innovatech-frontend || true
+            docker run -d \
+              --name innovatech-frontend \
+              --restart always \
+              -p 80:80 \
+              bpy4shn/frontend:latest
+
+            ssh -o StrictHostKeyChecking=no -i ~/devops-key.pem ec2-user@10.0.2.128 '
+              docker pull bpy4shn/backend:latest &&
+              docker rm -f innovatech-backend || true &&
+              docker run -d \
+                --name innovatech-backend \
+                --restart always \
+                -e PORT=3001 \
+                -e DB_HOST=10.0.3.25 \
+                -e DB_PORT=3306 \
+                -e DB_NAME=innovatech_ops \
+                -e DB_USER=app_user \
+                -e DB_PASSWORD=app_secret \
+                -e CORS_ORIGIN=http://54.82.9.178 \
+                -p 3001:3001 \
+                bpy4shn/backend:latest
+            '
