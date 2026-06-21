@@ -21,7 +21,7 @@ app.get("/api/health", async (_req, res) => {
     await pool.query("SELECT 1");
     res.status(200).json({ status: "okk", database: "connected" });
   } catch (error) {
-    res.status(500).json({ status: "error", database: "disconnected" });
+    res.status(500).json({ status: "errror", database: "disconnected" });
   }
 });
 
@@ -107,6 +107,30 @@ app.get("/api/tickets", async (_req, res, next) => {
     `);
 
     res.json(rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/tickets", async (req, res, next) => {
+  try {
+    const { title, description, priority, status, related_item_id } = req.body;
+
+    const [result] = await pool.query(`
+      INSERT INTO support_tickets (title, description, priority, status, related_item_id)
+      VALUES (?, ?, ?, ?, ?)
+    `, [title, description, priority || "media", status || "Abierto", related_item_id || null]);
+
+   
+    const [[createdTicket]] = await pool.query(`
+      SELECT st.*, ii.name AS related_item_name
+      FROM support_tickets st
+      LEFT JOIN inventory_items ii ON ii.id = st.related_item_id
+      WHERE st.id = ?
+    `, [result.insertId]);
+
+    res.status(201).json(createdTicket);
+
   } catch (error) {
     next(error);
   }
