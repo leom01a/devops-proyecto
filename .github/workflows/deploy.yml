@@ -25,33 +25,30 @@ jobs:
         run: |
           aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 327940345200.dkr.ecr.us-east-1.amazonaws.com
 
-      - name: Build & Push frontend
+      - name: Build y Push Frontend
         run: |
           docker build --build-arg VITE_API_URL=http://innovatech-alb-1247484730.us-east-1.elb.amazonaws.com \
             -t 327940345200.dkr.ecr.us-east-1.amazonaws.com/innovatech-frontend:latest ./frontend
           docker push 327940345200.dkr.ecr.us-east-1.amazonaws.com/innovatech-frontend:latest
 
-      - name: Build & Push backend
+      - name: Build y Push Backend
         run: |
           docker build \
             -t 327940345200.dkr.ecr.us-east-1.amazonaws.com/innovatech-backend:latest ./backend
           docker push 327940345200.dkr.ecr.us-east-1.amazonaws.com/innovatech-backend:latest
 
-      - name: Deploy EC2 por SSH
+      - name: Deploy en EC2 (SIN LOGIN ECR)
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
-          key: ${{ secrets.EC2_SSH_KEY }}
+          key: ${{ secrets.EC2_KEY }}
           script: |
-
-            docker pull 327940345200.dkr.ecr.us-east-1.amazonaws.com/innovatech-frontend:latest
-            docker pull 327940345200.dkr.ecr.us-east-1.amazonaws.com/innovatech-backend:latest
-
             docker rm -f innovatech-frontend || true
             docker rm -f innovatech-backend || true
 
-            docker run -d --name innovatech-frontend --restart always -p 80:80 327940345200.dkr.ecr.us-east-1.amazonaws.com/innovatech-frontend:latest
+            docker run -d --name innovatech-frontend --restart always -p 80:80 \
+              327940345200.dkr.ecr.us-east-1.amazonaws.com/innovatech-frontend:latest
 
             docker run -d --name innovatech-backend --restart always \
               -e PORT=3001 \
