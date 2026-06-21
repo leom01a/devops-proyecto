@@ -21,27 +21,23 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-east-1
 
-      - name: Login to ECR
+      - name: Login to Amazon ECR
         run: |
-          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
 
       - name: Build frontend
         run: |
-          docker build --no-cache \
-            --build-arg VITE_API_URL=http://innovatech-alb-1247484730.us-east-1.elb.amazonaws.com \
-            -t frontend ./frontend
-
-          docker tag frontend:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/frontend:latest
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/frontend:latest
+          docker build --build-arg VITE_API_URL=http://innovatech-alb-1247484730.us-east-1.elb.amazonaws.com -t ${{ secrets.ECR_REGISTRY }}/frontend:latest ./frontend
+          docker push ${{ secrets.ECR_REGISTRY }}/frontend:latest
 
       - name: Build backend
         run: |
-          docker build --no-cache -t backend ./backend
+          docker build -t ${{ secrets.ECR_REGISTRY }}/backend:latest ./backend
+          docker push ${{ secrets.ECR_REGISTRY }}/backend:latest
 
-          docker tag backend:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/backend:latest
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/backend:latest
-
-      - name: Deploy ECS
+      - name: Force ECS deploy
         run: |
-          aws ecs update-service --cluster innovatech-cluster --service backend --force-new-deployment
-          aws ecs update-service --cluster innovatech-cluster --service frontend --force-new-deployment
+          aws ecs update-service \
+            --cluster innovatech-cluster \
+            --service backend \
+            --force-new-deployment
