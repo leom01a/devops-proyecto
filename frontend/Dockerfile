@@ -3,13 +3,16 @@ FROM node:22-alpine AS build
 WORKDIR /app
 
 COPY package*.json ./
-
 RUN rm -rf node_modules package-lock.json || true
-RUN npm install --legacy-peer-deps
+RUN npm install
 
 COPY . .
 
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
 RUN npm run build
+
 
 FROM nginx:1.27-alpine
 
