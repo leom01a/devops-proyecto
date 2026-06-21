@@ -13,7 +13,7 @@ jobs:
       - name: Checkout código
         uses: actions/checkout@v4
 
-      - name: Configurar credenciales AWS
+      - name: Configurar AWS
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -25,29 +25,25 @@ jobs:
         run: |
           aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 327940345200.dkr.ecr.us-east-1.amazonaws.com
 
-      - name: Build y Push Frontend
+      - name: Build & Push frontend
         run: |
           docker build --build-arg VITE_API_URL=http://innovatech-alb-1247484730.us-east-1.elb.amazonaws.com \
             -t 327940345200.dkr.ecr.us-east-1.amazonaws.com/innovatech-frontend:latest ./frontend
-
           docker push 327940345200.dkr.ecr.us-east-1.amazonaws.com/innovatech-frontend:latest
 
-      - name: Build y Push Backend
+      - name: Build & Push backend
         run: |
           docker build \
             -t 327940345200.dkr.ecr.us-east-1.amazonaws.com/innovatech-backend:latest ./backend
-
           docker push 327940345200.dkr.ecr.us-east-1.amazonaws.com/innovatech-backend:latest
 
-      - name: Deploy EC2
+      - name: Deploy EC2 por SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-      
-            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 327940345200.dkr.ecr.us-east-1.amazonaws.com
 
             docker pull 327940345200.dkr.ecr.us-east-1.amazonaws.com/innovatech-frontend:latest
             docker pull 327940345200.dkr.ecr.us-east-1.amazonaws.com/innovatech-backend:latest
@@ -55,21 +51,15 @@ jobs:
             docker rm -f innovatech-frontend || true
             docker rm -f innovatech-backend || true
 
-            docker run -d \
-              --name innovatech-frontend \
-            --restart always \
-            -p 80:80 \
-            327940345200.dkr.ecr.us-east-1.amazonaws.com/innovatech-frontend:latest
+            docker run -d --name innovatech-frontend --restart always -p 80:80 327940345200.dkr.ecr.us-east-1.amazonaws.com/innovatech-frontend:latest
 
-            docker run -d \
-                --name innovatech-backend \
-                --restart always \
-                -e PORT=3001 \
-                -e DB_HOST=172.31.23.138 \
-                -e DB_PORT=3306 \
-                -e DB_NAME=innovatech_ops \
-                -e DB_USER=app_user \
-                -e DB_PASSWORD=app_secret \
-                -e CORS_ORIGIN=http://innovatech-alb-1247484730.us-east-1.elb.amazonaws.com \
-                -p 3001:3001 \
-                327940345200.dkr.ecr.us-east-1.amazonaws.com/innovatech-backend:latest
+            docker run -d --name innovatech-backend --restart always \
+              -e PORT=3001 \
+              -e DB_HOST=172.31.23.138 \
+              -e DB_PORT=3306 \
+              -e DB_NAME=innovatech_ops \
+              -e DB_USER=app_user \
+              -e DB_PASSWORD=app_secret \
+              -e CORS_ORIGIN=http://innovatech-alb-1247484730.us-east-1.elb.amazonaws.com \
+              -p 3001:3001 \
+              327940345200.dkr.ecr.us-east-1.amazonaws.com/innovatech-backend:latest
