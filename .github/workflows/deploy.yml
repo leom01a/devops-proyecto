@@ -18,30 +18,47 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-east-1
 
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build frontend
+      - name: Build frontend image
         run: |
-          docker build --build-arg VITE_API_URL=http://innovatech-alb-1247484730.us-east-1.elb.amazonaws.com:3001 -t frontend ./frontend
+          docker build \
+            --build-arg VITE_API_URL=http://innovatech-alb-1247484730.us-east-1.elb.amazonaws.com \
+            -t frontend ./frontend
+
+      - name: Tag frontend image
+        run: |
           docker tag frontend:latest ${{ secrets.ECR_FRONTEND_URI }}:latest
+
+      - name: Push frontend image
+        run: |
           docker push ${{ secrets.ECR_FRONTEND_URI }}:latest
 
-      - name: Build backend
+      - name: Build backend image
         run: |
           docker build -t backend ./backend
+
+      - name: Tag backend image
+        run: |
           docker tag backend:latest ${{ secrets.ECR_BACKEND_URI }}:latest
+
+      - name: Push backend image
+        run: |
           docker push ${{ secrets.ECR_BACKEND_URI }}:latest
 
-      - name: Deploy to ECS
+      - name: Deploy backend ECS
         run: |
           aws ecs update-service \
             --cluster innovatech-cluster \
             --service backend \
             --force-new-deployment
 
+      - name: Deploy frontend ECS
+        run: |
           aws ecs update-service \
             --cluster innovatech-cluster \
             --service frontend \
