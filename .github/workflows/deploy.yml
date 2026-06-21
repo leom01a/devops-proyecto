@@ -23,17 +23,17 @@ jobs:
 
       - name: Login to Amazon ECR
         run: |
-          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 327940345200.dkr.ecr.us-east-1.amazonaws.com
 
       - name: Build frontend
         run: |
-          docker build --build-arg VITE_API_URL=http://innovatech-alb-1247484730.us-east-1.elb.amazonaws.com -t ${{ secrets.ECR_REGISTRY }}/frontend:latest ./frontend
-          docker push ${{ secrets.ECR_REGISTRY }}/frontend:latest
+          docker build --build-arg VITE_API_URL=http://innovatech-alb-1247484730.us-east-1.elb.amazonaws.com -t 327940345200.dkr.ecr.us-east-1.amazonaws.com/frontend:latest ./frontend
+          docker push 327940345200.dkr.ecr.us-east-1.amazonaws.com/frontend:latest
 
       - name: Build backend
         run: |
-          docker build -t ${{ secrets.ECR_REGISTRY }}/backend:latest ./backend
-          docker push ${{ secrets.ECR_REGISTRY }}/backend:latest
+          docker build -t 327940345200.dkr.ecr.us-east-1.amazonaws.com/backend:latest ./backend
+          docker push 327940345200.dkr.ecr.us-east-1.amazonaws.com/backend:latest
 
       - name: Force ECS deploy
         run: |
