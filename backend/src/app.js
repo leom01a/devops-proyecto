@@ -137,6 +137,50 @@ app.post("/api/tickets", async (req, res, next) => {
 });
 
 /* =========================
+   ELIMINAR ITEMS Y TICKETS
+========================= */
+
+// Eliminar un producto del inventario
+app.delete("/api/items/:id", async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const [result] = await pool.query(
+      "DELETE FROM inventory_items WHERE id = ?", 
+      [id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Producto no encontrado" });
+    }
+
+    res.json({ message: "Producto eliminado con éxito" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Eliminar un ticket de soporte
+app.delete("/api/tickets/:id", async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const [result] = await pool.query(
+      "DELETE FROM support_tickets WHERE id = ?", 
+      [id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Ticket no encontrado" });
+    }
+
+    res.json({ message: "Ticket eliminado con éxito" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/* =========================
    ERROR HANDLER
 ========================= */
 app.use((error, _req, res, _next) => {
