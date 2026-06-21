@@ -13,49 +13,36 @@ jobs:
       - name: Checkout código
         uses: actions/checkout@v4
 
-      - name: Login Docker Hub
-        uses: docker/login-action@v3
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_TOKEN }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build frontend
         run: |
-          docker build --build-arg VITE_API_URL=http://32.199.164.231:3001 -t bpy4shn/frontend:latest ./frontend
-          docker push bpy4shn/frontend:latest
+          docker build --build-arg VITE_API_URL=http://innovatech-alb-1247484730.us-east-1.elb.amazonaws.com:3001 -t frontend ./frontend
+          docker tag frontend:latest ${{ secrets.ECR_FRONTEND_URI }}:latest
+          docker push ${{ secrets.ECR_FRONTEND_URI }}:latest
 
       - name: Build backend
         run: |
-          docker build -t bpy4shn/backend:latest ./backend
-          docker push bpy4shn/backend:latest
+          docker build -t backend ./backend
+          docker tag backend:latest ${{ secrets.ECR_BACKEND_URI }}:latest
+          docker push ${{ secrets.ECR_BACKEND_URI }}:latest
 
-      - name: Deploy frontend and backend in EC2
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
+      - name: Deploy to ECS
+        run: |
+          aws ecs update-service \
+            --cluster innovatech-cluster \
+            --service backend \
+            --force-new-deployment
 
-            docker pull bpy4shn/frontend:latest
-            docker rm -f innovatech-frontend || true
-            docker run -d \
-              --name innovatech-frontend \
-              --restart always \
-              -p 80:80 \
-              bpy4shn/frontend:latest
-
-            docker pull bpy4shn/backend:latest
-            docker rm -f innovatech-backend || true
-            docker run -d \
-              --name innovatech-backend \
-              --restart always \
-              -e PORT=3001 \
-              -e DB_HOST=10.0.3.25 \
-              -e DB_PORT=3306 \
-              -e DB_NAME=innovatech_ops \
-              -e DB_USER=app_user \
-              -e DB_PASSWORD=app_secret \
-              -e CORS_ORIGIN=http://100.27.5.45 \
-              -p 3001:3001 \
-              bpy4shn/backend:latest
+          aws ecs update-service \
+            --cluster innovatech-cluster \
+            --service frontend \
+            --force-new-deployment
