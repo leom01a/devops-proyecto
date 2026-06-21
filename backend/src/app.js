@@ -7,28 +7,27 @@ dotenv.config();
 
 const app = express();
 
-
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-
-    return callback(null, true); 
-  }
+  origin: "*"
 }));
 
 app.use(express.json());
 
-
-app.get("/health", async (_req, res) => {
+/* =========================
+   HEALTH CHECK (AWS ALB)
+========================= */
+app.get("/api/health", async (_req, res) => {
   try {
     await pool.query("SELECT 1");
-    res.json({ status: "ok", database: "connected" });
+    res.status(200).json({ status: "ok", database: "connected" });
   } catch (error) {
     res.status(500).json({ status: "error", database: "disconnected" });
   }
 });
 
-
+/* =========================
+   DASHBOARD
+========================= */
 app.get("/api/dashboard", async (_req, res, next) => {
   try {
     const [[itemTotals]] = await pool.query(`
@@ -57,7 +56,9 @@ app.get("/api/dashboard", async (_req, res, next) => {
   }
 });
 
-
+/* =========================
+   ITEMS
+========================= */
 app.get("/api/items", async (_req, res, next) => {
   try {
     const [rows] = await pool.query(`
@@ -93,7 +94,9 @@ app.post("/api/items", async (req, res, next) => {
   }
 });
 
-
+/* =========================
+   TICKETS
+========================= */
 app.get("/api/tickets", async (_req, res, next) => {
   try {
     const [rows] = await pool.query(`
@@ -109,7 +112,9 @@ app.get("/api/tickets", async (_req, res, next) => {
   }
 });
 
-
+/* =========================
+   ERROR HANDLER
+========================= */
 app.use((error, _req, res, _next) => {
   console.error(error);
   res.status(500).json({
