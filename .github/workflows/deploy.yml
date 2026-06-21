@@ -24,29 +24,29 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build frontend image
+      - name: Build frontend
         run: |
-          docker build \
+          docker build --no-cache \
             --build-arg VITE_API_URL=http://innovatech-alb-1247484730.us-east-1.elb.amazonaws.com \
             -t frontend ./frontend
 
-      - name: Tag frontend image
+      - name: Tag frontend
         run: |
           docker tag frontend:latest ${{ secrets.ECR_FRONTEND_URI }}:latest
 
-      - name: Push frontend image
+      - name: Push frontend
         run: |
           docker push ${{ secrets.ECR_FRONTEND_URI }}:latest
 
-      - name: Build backend image
+      - name: Build backend
         run: |
-          docker build -t backend ./backend
+          docker build --no-cache -t backend ./backend
 
-      - name: Tag backend image
+      - name: Tag backend
         run: |
           docker tag backend:latest ${{ secrets.ECR_BACKEND_URI }}:latest
 
-      - name: Push backend image
+      - name: Push backend
         run: |
           docker push ${{ secrets.ECR_BACKEND_URI }}:latest
 
