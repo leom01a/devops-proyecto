@@ -39,13 +39,15 @@ jobs:
 
           docker push 327940345200.dkr.ecr.us-east-1.amazonaws.com/innovatech-backend:latest
 
-      - name: Deploy en EC2
+      - name: Deploy EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+      
+            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 327940345200.dkr.ecr.us-east-1.amazonaws.com
 
             docker pull 327940345200.dkr.ecr.us-east-1.amazonaws.com/innovatech-frontend:latest
             docker pull 327940345200.dkr.ecr.us-east-1.amazonaws.com/innovatech-backend:latest
@@ -55,19 +57,19 @@ jobs:
 
             docker run -d \
               --name innovatech-frontend \
-              --restart always \
-              -p 80:80 \
-              327940345200.dkr.ecr.us-east-1.amazonaws.com/innovatech-frontend:latest
+            --restart always \
+            -p 80:80 \
+            327940345200.dkr.ecr.us-east-1.amazonaws.com/innovatech-frontend:latest
 
             docker run -d \
-              --name innovatech-backend \
-              --restart always \
-              -e PORT=3001 \
-              -e DB_HOST=172.31.23.138 \
-              -e DB_PORT=3306 \
-              -e DB_NAME=innovatech_ops \
-              -e DB_USER=app_user \
-              -e DB_PASSWORD=app_secret \
-              -e CORS_ORIGIN=http://innovatech-alb-1247484730.us-east-1.elb.amazonaws.com \
-              -p 3001:3001 \
-              327940345200.dkr.ecr.us-east-1.amazonaws.com/innovatech-backend:latest
+                --name innovatech-backend \
+                --restart always \
+                -e PORT=3001 \
+                -e DB_HOST=172.31.23.138 \
+                -e DB_PORT=3306 \
+                -e DB_NAME=innovatech_ops \
+                -e DB_USER=app_user \
+                -e DB_PASSWORD=app_secret \
+                -e CORS_ORIGIN=http://innovatech-alb-1247484730.us-east-1.elb.amazonaws.com \
+                -p 3001:3001 \
+                327940345200.dkr.ecr.us-east-1.amazonaws.com/innovatech-backend:latest
