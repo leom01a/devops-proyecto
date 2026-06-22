@@ -329,3 +329,221 @@ Leonardo Méndez y Diego Araya
 Para la asignatura:
 
 ISY1101 Introducción a Herramientas DevOps
+
+# Innovatech Inventory Desk - DevOps AWS ECS
+
+Proyecto desarrollado para la Evaluación Parcial 3 de **ISY1101 Introducción a Herramientas DevOps**.
+
+La solución implementa una arquitectura basada en contenedores, automatización CI/CD y orquestación utilizando servicios nativos de AWS.
+
+## Tecnologías utilizadas
+
+* React + Vite
+* Node.js + Express
+* MySQL 8.1
+* Docker
+* GitHub Actions
+* Amazon ECS
+* Amazon ECR
+* Application Load Balancer
+* Amazon CloudWatch
+* AWS Academy
+
+---
+
+# Arquitectura Final EP3
+
+Durante la EP3 la arquitectura evolucionó desde un despliegue basado en instancias EC2 hacia una solución completamente orquestada utilizando Amazon ECS.
+
+## Componentes principales
+
+* GitHub
+* GitHub Actions
+* Amazon ECR
+* Amazon ECS
+* Application Load Balancer
+* CloudWatch
+* Frontend Service
+* Backend Service
+* Base de Datos MySQL
+
+## Flujo general
+
+Usuario
+↓
+Application Load Balancer
+↓
+Frontend ECS Service
+↓
+Backend ECS Service
+↓
+Base de Datos MySQL
+
+GitHub
+↓
+GitHub Actions
+↓
+Amazon ECR
+↓
+Amazon ECS
+
+---
+
+# Amazon ECS
+
+Se utilizó Amazon ECS como plataforma de orquestación para ejecutar y administrar los contenedores de la aplicación.
+
+## Servicios desplegados
+
+* innovatech-frontend-service
+* innovatech-backend-service
+
+## Beneficios obtenidos
+
+* Recuperación automática de tareas
+* Administración centralizada
+* Despliegue continuo
+* Escalabilidad
+* Alta disponibilidad
+
+---
+
+# Amazon ECR
+
+Las imágenes Docker son almacenadas en Amazon Elastic Container Registry (ECR).
+
+## Repositorios utilizados
+
+* innovatech-frontend
+* innovatech-backend
+
+GitHub Actions publica automáticamente nuevas versiones de las imágenes cada vez que se realiza un despliegue.
+
+---
+
+# CI/CD con GitHub Actions
+
+Se implementó un pipeline completamente automatizado.
+
+## Flujo implementado
+
+1. Push a rama deploy
+2. Build Frontend
+3. Push Frontend a ECR
+4. Build Backend
+5. Push Backend a ECR
+6. Actualización automática de ECS
+7. Nuevo despliegue de servicios
+8. Aplicación disponible automáticamente
+
+## Beneficios
+
+* Automatización completa
+* Menor riesgo de errores manuales
+* Entregas continuas
+* Actualizaciones rápidas
+
+---
+
+# Application Load Balancer
+
+Se configuró un Application Load Balancer para distribuir tráfico hacia los servicios desplegados en ECS.
+
+## Funciones
+
+* Exposición pública del Frontend
+* Health Checks automáticos
+* Balanceo de carga
+* Integración con ECS
+
+## Target Groups
+
+* innovatech-frontend-tg
+* innovatech-backend-tg
+
+---
+
+# Amazon CloudWatch
+
+CloudWatch fue utilizado para monitoreo y análisis del entorno.
+
+## Funcionalidades utilizadas
+
+* Visualización de logs
+* Seguimiento de errores
+* Validación de despliegues
+* Monitoreo de tareas ECS
+
+## Log Groups
+
+* /ecs/innovatech-frontend-task
+* /ecs/innovatech-backend-task
+
+---
+
+# Autoscaling
+
+Amazon ECS permite implementar escalamiento automático utilizando métricas de CPU y memoria.
+
+Durante esta evaluación se dejó preparada la arquitectura para futuras estrategias de escalamiento.
+
+## Beneficios
+
+* Mejor rendimiento
+* Mayor disponibilidad
+* Optimización de recursos
+* Adaptación a aumentos de carga
+
+---
+
+# Resultados Obtenidos
+
+Se logró:
+
+* Orquestar contenedores mediante Amazon ECS.
+* Automatizar despliegues utilizando GitHub Actions.
+* Publicar imágenes Docker en Amazon ECR.
+* Implementar balanceo mediante Application Load Balancer.
+* Monitorear servicios mediante CloudWatch.
+* Mantener comunicación Frontend → Backend → Base de Datos.
+* Garantizar recuperación automática de servicios.
+
+---
+
+# Estado del Proyecto
+
+Docker: OK
+
+Amazon ECR: OK
+
+Amazon ECS: OK
+
+Application Load Balancer: OK
+
+GitHub Actions: OK
+
+CloudWatch: OK
+
+Frontend Público: OK
+
+Backend Operativo: OK
+
+Pipeline CI/CD: OK
+
+Orquestación: OK
+
+Integración Front → Back → DB: OK
+
+Despliegue Automático: OK
+
+Monitoreo: OK
+
+---
+
+# Autores
+
+Leonardo Méndez
+
+Diego Araya
+
+ISY1101 – Introducción a Herramientas DevOps
